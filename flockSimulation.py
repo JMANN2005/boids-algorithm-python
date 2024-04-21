@@ -15,14 +15,15 @@ pygame.display.set_caption("flocking simulation")
 ##settings
 flockSize = 30
 ##multiplyers
-coodination = 0.05
+coodination = 0.03
 grouping = 0.05
-separation = 0.00002
+separation = 0.00005
 selfVision = 300
-preditorVision = 300
 centerOfScreen = 0.05
 speed = 0.5
 speedTowardsAverage = 0.2
+preditorEnabled = True
+preditorVision = 300
 fear = 0.001
 preditorSpeed = 2
 preditorTurning = 0.05
@@ -83,23 +84,24 @@ class Bird:
         angleDiff = (midAngle - self.angle) % 360
         if angleDiff > 180:
             angleDiff -= 360
-
         self.angle += angleDiff * centerOfScreen
         
         ##speed up far from centre
         self.speed -= (self.speed - (calcdistance(self.x,self.y,averageX,averageY)/50)) * speed
         ##speed towards average
         self.speed -= (self.speed - averageSpeed) * speedTowardsAverage
-        ##avoid preditor
-        distance = calcdistance(self.x,self.y,preditor.x,preditor.y)
-        if distance < preditorVision:
-            xdiff = self.x - preditor.x
-            ydiff = self.y - preditor.y
-            angletoclose = (math.atan2(ydiff,xdiff) * 180/math.pi - 90) % 360
-            angleDifference = (angletoclose - (self.angle)) % 360
-            if angleDifference > 180:
-                angleDifference -= 360
-            self.angle -= fear * angleDifference * (preditorVision-distance)
+        
+        if preditorEnabled:
+            ##avoid preditor
+            distance = calcdistance(self.x,self.y,preditor.x,preditor.y)
+            if distance < preditorVision:
+                xdiff = self.x - preditor.x
+                ydiff = self.y - preditor.y
+                angletoclose = (math.atan2(ydiff,xdiff) * 180/math.pi - 90) % 360
+                angleDifference = (angletoclose - (self.angle)) % 360
+                if angleDifference > 180:
+                    angleDifference -= 360
+                self.angle -= fear * angleDifference * (preditorVision-distance)
         ##movement
         self.x += self.speed*math.sin(self.angle * math.pi/180)
         self.y -= self.speed*math.cos(self.angle * math.pi/180)
@@ -128,8 +130,9 @@ def calcdistance(x1,y1,x2,y2):
 flock = []
 for i in range(0,flockSize):
     flock.append(Bird(i))
-    
-preditor = Bird(flockSize+1)
+
+if preditorEnabled:
+    preditor = Bird(flockSize+1)
 
 averageX = 0
 averageY = 0
@@ -163,9 +166,9 @@ while run:
     totalY = 0
     totalAngle = 0
     totalSpeed = 0
-    
-    preditor.updatePreditor()
-    preditor.draw()
+    if preditorEnabled:
+        preditor.updatePreditor()
+        preditor.draw()
     pygame.display.update()
 pygame.quit()
     
